@@ -2,55 +2,43 @@ name: Update International EPG
 
 on:
   workflow_dispatch:
-
   schedule:
     - cron: "30 20 * * *"
 
-
 permissions:
-  contents: write*
+  contents: write
 
 jobs:
-
   update-epg:
-
-    runs-o*: ubuntu-latest
+    runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-     *- name: Checkout repository
-      * uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
+      - name: Build master EPG
+        run: python scripts/merge_epg.py
 
-     *- name: Set up Python
-        uses* actions/setup-python@v5
-        w*th:
-          python-version: "3.1*"
-
-
-      - name: Build master EPG*        run: |
-          python sc*ipts/merge_epg.py
-
-
-      - name: *how generated file
+      - name: Validate generated EPG
         run: |
-*         ls -lh docs/
-          gz*p -t docs/international-master.xml*gz
+          ls -lh docs/
+          gzip -t docs/international-master.xml.gz
 
-
-      - name: Commit updated *PG
+      - name: Commit updated EPG
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/international-master.xml.gz
 
-          git c*nfig user.name "github-actions[bot]"
-          git config user.email *41898282+github-actions[bot]@users*noreply.github.com"
-
-          git*add docs/international-master.xml.*z
-
-          if git diff --cached *-quiet; then
-            echo "No *PG changes detected."
-            *xit 0
+          if git diff --cached --quiet; then
+            echo "No EPG changes detected."
+            exit 0
           fi
 
-          git *ommit -m "Update international mas*er EPG"
-
+          git commit -m "Update international master EPG"
           git push
